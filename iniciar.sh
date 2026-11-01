@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-# Un solo proceso: sistema central + 2 cajas + interfaz.  ./iniciar.sh [demo]
 cd "$(dirname "$0")" || exit 1
 mkdir -p out && javac -encoding UTF-8 -d out src/*.java || exit 1
 if [ "$1" = "demo" ]; then export BOLETOS=6 CUPO=1; fi

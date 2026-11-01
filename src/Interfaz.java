@@ -434,8 +434,7 @@ public class Interfaz {
         }
         Path archivo = web.resolve(ruta.substring(1)).normalize();
         if (!archivo.startsWith(web) || !Files.isRegularFile(archivo)) {
-            responder(ex, 404, "text/plain; charset=UTF-8", ("No se encontró " + ruta
-                    + ". Ejecute la app desde la carpeta practica-07-apps-pwa.").getBytes(StandardCharsets.UTF_8));
+            responder(ex, 404, "text/plain; charset=UTF-8", ("No se encontró " + ruta).getBytes(StandardCharsets.UTF_8));
             return;
         }
         byte[] datos = Files.readAllBytes(archivo);

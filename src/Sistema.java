@@ -33,7 +33,7 @@ public class Sistema {
     public String vender(String caja, String cliente, int relojCaja, String idPeticion) {
         synchronized (candado) {
             reloj = Math.max(reloj, relojCaja) + 1;
-            String quien = "[" + caja + " · " + cliente + "]";
+            String quien = "[" + caja + " " + cliente + "]";
 
             String previa = atendidas.get(idPeticion);
             if (previa != null) {

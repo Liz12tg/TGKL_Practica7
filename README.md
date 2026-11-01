@@ -30,76 +30,74 @@ Para detener el sistema, presiona Ctrl + C o cierra la ventana.
 
 ## Instalación como aplicación
 
-Una PWA instalable necesita HTTPS fuera de `localhost`. Los hostings dan el certificado gratis, así que basta con subir el repo:
+La aplicación utiliza una PWA (Progressive Web App), que permite instalar una página web como si fuera una aplicación normal.
 
-1. Sube la carpeta a GitHub (el `Dockerfile` ya está en la raíz de la práctica).
-2. En [Render](https://render.com) → *New → Web Service* → elige el repo → *Runtime: Docker* → *Create*. (Railway, Fly.io o Google Cloud Run funcionan igual.)
-3. En unos minutos queda en `https://tu-app.onrender.com`; ábrela en el celular y *Instalar*.
+Para instalarla desde internet necesita HTTPS. Esto se puede conseguir desplegando el proyecto en servicios como Render, Railway o Google Cloud Run.
 
-### Instalarla como app
+- Chrome y Edge (PC y Android): selecciona el icono de instalación o el botón Instalar.
 
-- **Chrome/Edge (PC y Android):** icono de instalar en la barra de direcciones, o el botón **Instalar** de la propia app.
-- **iOS (Safari):** Compartir → *Añadir a pantalla de inicio* (la app muestra una pista).
-- `localhost` cuenta como contexto seguro, por eso el service worker funciona sin HTTPS. En otra máquina se necesita HTTPS.
+- iOS (Safari): selecciona Compartir y después Añadir a pantalla de inicio.
 
-### Probar el modo sin conexión
+### Funcionamiento sin conexión
 
-1. Abre la app y navega un poco (se guarda la copia).
-2. Cierra la ventana de **Interfaz** (o en DevTools → Network → *Offline*).
-3. Recarga: la app abre desde caché, el indicador pasa a **Datos guardados** y aparece el aviso amarillo.
-4. Compra: queda en **Mis boletos → En cola**. Al volver el servidor se envía sola, **una sola vez** (`Idempotency-Key`).
+La aplicación puede abrirse sin internet gracias al Service Worker, que guarda una copia de los archivos necesarios.
 
-DevTools → **Application** muestra *Manifest*, *Service Workers* y *Cache Storage*.
+También permite realizar compras sin conexión:
 
-## API REST v1 (`docs/openapi.json`)
+1. Se guarda una copia de la aplicación al visitarla.
 
-| Método y ruta | Descripción | Respuestas |
-|---|---|---|
-| `GET /api/v1/salud` | Estado del servicio | 200 |
-| `GET /api/v1/evento` | Boletos totales, vendidos, disponibles, `instancia` | 200, **304** (ETag) |
-| `GET /api/v1/cajas` | Cajas y ocupación | 200, 304 |
-| `GET /api/v1/eventos?desde=N` | Bitácora incremental | 200 |
-| `GET /api/v1/compras?ids=&activas=&limite=` | Lista de compras | 200 |
-| `POST /api/v1/compras` | Crea una compra `{nombre, boletos}` | **202** + `Location`, **200** si repite la llave, 400, 403, 413, 415, **429** + `Retry-After` |
-| `GET /api/v1/compras/{id}` | Estado de una compra | 200, 404, 405 (+`Allow`) |
+2. Si se pierde la conexión, la aplicación sigue abriendo con los datos almacenados.
 
-## Web App Manifest (`web/manifest.webmanifest`)
+3. Las compras realizadas se guardan en una cola.
 
-| Campo | Valor / para qué sirve |
+4. Cuando regresa la conexión, se envían automáticamente al servidor, evitando que una misma compra se registre dos veces.
+
+### API REST
+
+La aplicación cuenta con una API REST versión 1, que permite consultar información y realizar compras mediante solicitudes HTTP.
+
+| Método y ruta | Función | 
 |---|---|
-| `id`, `start_url`, `scope` | Identidad estable de la app; `/?origen=pwa` permite medir aperturas como app |
-| `name`, `short_name`, `lang`, `dir`, `description` | Texto bajo el icono y en la instalación |
-| `display: standalone` + `display_override` | Ventana sin barra del navegador (con alternativas) |
-| `theme_color`, `background_color` | Color de la barra y de la pantalla de arranque |
-| `icons` | 192, 512, *maskable* 512 y SVG |
-| `shortcuts` | Atajos de icono: *Comprar boletos* y *Mis boletos* |
-| `screenshots` | Capturas móvil y ancha para el diálogo de instalación |
-| `launch_handler`, `categories`, `orientation` | Reutiliza la ventana abierta; clasificación; orientación |
+| `GET /api/v1/salud` | Comprueba si el servicio está funcionando | 
+| `GET /api/v1/evento` | Consulta los boletos disponibles, vendidos y totales | 
+| `GET /api/v1/cajas` | Consulta las cajas y su ocupación | 
+| `GET /api/v1/eventos?desde=N` | Consulta las compras realizada | 
+| `GET /api/v1/compras?ids=&activas=&limite=` | Registra una nueva compra | 
+| `POST /api/v1/compras` | Consulta el estado de una compra específica |
+| `GET /api/v1/compras/{id}` | Consulta el registro de eventos del sistema | 
 
-## Service worker (`web/sw.js`)
+La API también utiliza mecanismos para evitar compras duplicadas y controlar las solicitudes.
 
-| Recurso | Estrategia | Por qué |
-|---|---|---|
-| Navegación (HTML) | Red primero (3 s) → `/` en caché → `offline.html` | Siempre la versión nueva, pero abre sin red |
-| CSS/JS/manifest | *Stale-while-revalidate* | Rápido y se actualiza solo |
-| Iconos | Caché primero | No cambian |
-| `GET /api/v1/*` | Red primero con respaldo en caché (marca `X-Desde-Cache`) | Datos frescos; si no hay red, últimos datos |
-| `GET /api/v1/eventos` | Solo red | Es una bitácora en vivo |
-| `POST` | No se intercepta | La cola offline la maneja la app |
+La documentación completa de los endpoints se encuentra en docs/openapi.json.
 
-Cachés versionadas (`boleteria-app-v1`, `boleteria-datos-v1`). Ciclo de actualización: si hay un SW nuevo, la app muestra
-**"Hay una versión nueva" → Actualizar** (`ACTIVAR` → `skipWaiting` → recarga). También hay Background Sync (`enviar-cola`),
-clic en notificaciones y *badge* con el número de boletos.
+## Componentes de la PWA
+
+La aplicación utiliza dos elementos principales:
+
+- Web App Manifest: contiene la información de la aplicación, como su nombre, iconos, colores, forma de presentación y accesos directos. Permite que el navegador la reconozca como una aplicación instalable.
+
+- Service Worker: administra la caché, permite abrir la aplicación sin conexión y controla la actualización de los archivos almacenados.
+
+Cuando existe una nueva versión, la aplicación muestra un aviso para que el usuario pueda actualizarla.
 
 ## Seguridad
 
-- En local: solo `127.0.0.1` y verificación de cabecera `Host`. En hosting (`PORT`): red pública, token interno aleatorio.
-- CSP estricta (`default-src 'none'`, sin scripts ni estilos en línea), `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors 'none'`.
-- `X-Requested-With` obligatorio en POST (anti-CSRF) y `Content-Type: application/json`.
-- Archivos estáticos solo por lista permitida (sin *path traversal*). Cuerpo máximo 2 KB, máximo de compras activas.
+Se implementan medidas para proteger la comunicación y controlar las solicitudes:
+
+- Uso de un token interno para la comunicación entre programas.
+
+- Validación de las solicitudes de compra para evitar peticiones no autorizadas.
+
+- Restricción de los archivos que pueden consultarse desde la aplicación.
+
+- Límite al tamaño de las solicitudes y a las compras activas.
+
+- Uso de políticas de seguridad para proteger el contenido web.
 
 ## Limitaciones
 
-- La compra offline se encola en `localStorage` y se envía al volver la app/servidor; no es una bandeja IndexedDB completa.
-- Las compras viven en memoria de `Interfaz`: al reiniciarla se pierden y la app las marca como *sesión anterior*.
-- No hay notificaciones push reales (requieren un servidor Web Push y HTTPS).
+- Las compras sin conexión se guardan en localStorage hasta que se recupera la conexión.
+
+- Las compras se almacenan en memoria, por lo que se pierden al reiniciar la interfaz. La aplicación las identifica como pertenecientes a una sesión anterior.
+
+- No se implementan notificaciones push reales.

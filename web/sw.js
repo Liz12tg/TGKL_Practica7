@@ -1,18 +1,3 @@
-/* Service worker de Boletería Ópera.
- *
- * Es un "intermediario" entre la app y la red: todas las peticiones de la página pasan por aquí.
- * Según el tipo de petición elige una estrategia de caché:
- *
- *   - Navegación (abrir la app)      -> red primero; si no hay red, la copia guardada, y si no, /offline.html
- *   - Archivos de la app (css, js)   -> stale-while-revalidate: responde con la copia y la actualiza en segundo plano
- *   - Iconos                         -> caché primero (casi nunca cambian)
- *   - API de lectura (evento, cajas, compras) -> red primero; sin red, la última respuesta guardada
- *   - API de bitácora (/eventos)     -> solo red (una copia vieja confundiría)
- *   - Cualquier POST                 -> no se toca: la app lo guarda en su cola y lo reenvía al volver la conexión
- *
- * Para publicar una versión nueva de la app se cambia VERSION: el navegador instala el worker nuevo en
- * segundo plano y la app avisa "Hay una versión nueva" para recargar.
- */
 const VERSION = 'v2';
 const CACHE_APP = 'boleteria-app-' + VERSION;
 const CACHE_DATOS = 'boleteria-datos-' + VERSION;
@@ -30,7 +15,6 @@ const ARCHIVOS_APP = [
 ];
 
 self.addEventListener('install', evento => {
-  // Guarda de una vez toda la "cáscara" de la app. Si un archivo falla, la instalación falla y se reintenta.
   evento.waitUntil(
     caches.open(CACHE_APP).then(cache => cache.addAll(ARCHIVOS_APP.map(url => new Request(url, { cache: 'reload' }))))
   );
@@ -105,7 +89,6 @@ async function apiRedPrimero(peticion) {
   } catch (e) {
     const guardada = await cache.match(peticion);
     if (guardada) {
-      // Se marca para que la app sepa que está mostrando datos guardados y no datos en vivo.
       const copia = new Response(guardada.body, guardada);
       copia.headers.set('X-Desde-Cache', '1');
       return copia;
@@ -124,7 +107,7 @@ async function soloRed(peticion) {
 
 self.addEventListener('fetch', evento => {
   const peticion = evento.request;
-  if (peticion.method !== 'GET') return;                       // los POST los maneja la app (cola + idempotencia)
+  if (peticion.method !== 'GET') return;                      
   const url = new URL(peticion.url);
   if (url.origin !== self.location.origin) return;
 
@@ -137,14 +120,12 @@ self.addEventListener('fetch', evento => {
   } else if (url.pathname.startsWith('/icons/')) {
     evento.respondWith(cachePrimero(peticion));
   } else if (url.pathname === '/sw.js') {
-    return;                                                    // el navegador lo revisa por su cuenta
+    return;                                                    6
   } else {
     evento.respondWith(staleWhileRevalidate(peticion));
   }
 });
 
-// Sincronización en segundo plano: cuando vuelve la conexión, el navegador despierta al worker
-// y este le pide a la app abierta que envíe su cola de compras pendientes.
 self.addEventListener('sync', evento => {
   if (evento.tag === 'enviar-cola') {
     evento.waitUntil(self.clients.matchAll({ includeUncontrolled: true }).then(lista => {
@@ -153,7 +134,6 @@ self.addEventListener('sync', evento => {
   }
 });
 
-// Al tocar una notificación ("Tu compra terminó") se abre o enfoca la app en "Mis boletos".
 self.addEventListener('notificationclick', evento => {
   evento.notification.close();
   evento.waitUntil((async () => {

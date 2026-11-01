@@ -1,7 +1,3 @@
-/* Boletería Ópera: estilos de la app.
-   Móvil primero. En pantallas grandes la barra de pestañas pasa a un costado.
-   No hay estilos en línea en el HTML (la política de seguridad CSP no los permite). */
-
 :root {
   --bg: #EEF4FB;
   --surface: #FFFFFF;
@@ -71,7 +67,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font: 16px/1.45 var(--sans);
-  overscroll-behavior-y: contain;       /* sin "rebote" que delate que es una página web */
+  overscroll-behavior-y: contain;       
   -webkit-font-smoothing: antialiased;
   text-size-adjust: 100%;
 }
@@ -83,7 +79,7 @@ button { font: inherit; color: inherit; }
 .ico-medio { width: 28px; height: 28px; color: var(--azul); }
 .ico-grande { width: 56px; height: 56px; color: var(--azul); opacity: .85; }
 
-/* ------------------------------------------------------------------ estructura */
+/* estructura */
 .app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 
 .barra {
@@ -137,7 +133,7 @@ button { font: inherit; color: inherit; }
 .subtitulo { color: var(--muted); margin-top: -6px; }
 .seccion { font: 600 20px/1.2 var(--serif); margin-top: 10px; display: flex; align-items: center; gap: 10px; }
 
-/* ------------------------------------------------------------------ navegación inferior */
+/* navegación inferior */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
   display: grid; grid-template-columns: repeat(4, 1fr);
@@ -163,7 +159,7 @@ button { font: inherit; color: inherit; }
 }
 @media (prefers-color-scheme: dark) { .insignia-tab { color: #06142B; } }
 
-/* ------------------------------------------------------------------ tarjetas y controles */
+/* tarjetas y controles */
 .tarjeta {
   background: var(--surface); border-radius: var(--radio); padding: 16px; box-shadow: var(--sombra);
   display: flex; flex-direction: column; gap: 10px;
@@ -211,7 +207,7 @@ button { font: inherit; color: inherit; }
 .contador-btn:disabled { opacity: .35; box-shadow: none; }
 .contador-valor { font: 600 40px/1 var(--serif); font-variant-numeric: lining-nums tabular-nums; min-width: 2ch; text-align: center; }
 
-/* ------------------------------------------------------------------ cartel del evento */
+/* cartel del evento */
 .cartel {
   position: relative; overflow: hidden; color: #fff; border-radius: 24px; padding: 20px 20px 18px;
   background:
@@ -236,7 +232,7 @@ button { font: inherit; color: inherit; }
 .cartel-agotado { margin-top: 12px; display: inline-block; padding: 5px 12px; border-radius: 99px; background: rgba(0, 0, 0, .32); font-weight: 700; font-size: 14px; }
 .cartel.agotado .cifra { opacity: .55; }
 
-/* ------------------------------------------------------------------ compra en curso */
+/* compra en curso */
 .insignia { width: 14px; align-self: stretch; border-radius: 99px; background: var(--c, var(--azul)); flex: none; }
 .pasos { list-style: none; margin: 4px 0 0; padding: 0; display: flex; gap: 6px; }
 .pasos li { flex: 1; height: 8px; border-radius: 99px; background: var(--line); transition: background .3s; }
@@ -256,7 +252,7 @@ button { font: inherit; color: inherit; }
 .barra-accion-titulo { font: 600 20px/1.1 var(--serif); }
 .barra-accion-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ------------------------------------------------------------------ boletos (con forma de boleto) */
+/* boletos (con forma de boleto) */
 .boleto {
   --talon: 92px;
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--talon);
@@ -284,7 +280,7 @@ button { font: inherit; color: inherit; }
 .vacio { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 20px; color: var(--muted); }
 .vacio h3 { font: 600 22px/1.2 var(--serif); color: var(--ink); }
 
-/* ------------------------------------------------------------------ cajas */
+/* cajas */
 .cajas { display: grid; gap: 14px; }
 .caja { background: var(--surface); border-radius: var(--radio); padding: 16px; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 12px; }
 .caja.apagada { opacity: .55; }
@@ -299,7 +295,7 @@ button { font: inherit; color: inherit; }
 .caja-pie { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; flex-wrap: wrap; }
 .caja-pie b { color: var(--ink); font-variant-numeric: tabular-nums; }
 
-/* ------------------------------------------------------------------ en vivo */
+/* en vivo */
 .butacas { display: grid; grid-template-columns: repeat(auto-fill, var(--b, 26px)); gap: 6px; justify-content: center; }
 .butaca { width: var(--b, 26px); height: var(--b, 26px); border-radius: 8px 8px 3px 3px; border: 1.5px solid var(--seat-line); background: var(--seat-free); transition: background .2s; }
 .butaca.vendida { border-color: transparent; background: var(--c); }
@@ -326,7 +322,7 @@ button { font: inherit; color: inherit; }
 .fila.fin .f-texto { font-weight: 700; }
 .sin-eventos { padding: 18px; color: var(--muted); }
 
-/* ------------------------------------------------------------------ avisos flotantes y hoja inferior */
+/* avisos flotantes y hoja inferior */
 .avisos-flotantes {
   position: fixed; z-index: 60; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;
   bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom) + 14px);
@@ -356,11 +352,11 @@ button { font: inherit; color: inherit; }
 .hoja-folios { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .folio-chip { padding: 4px 12px; border-radius: 99px; background: var(--azul-wash); color: var(--azul-d); font: 600 18px var(--serif); font-variant-numeric: lining-nums tabular-nums; }
 
-/* ------------------------------------------------------------------ pantalla sin conexión (offline.html) */
+/* pantalla sin conexión (offline.html) */
 .pagina-offline { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px; text-align: center; }
 .pagina-offline .tarjeta { align-items: center; max-width: 420px; padding: 28px 24px; }
 
-/* ------------------------------------------------------------------ pantallas grandes: la navegación pasa a un costado */
+/* pantallas grandes: la navegación pasa a un costado */
 @media (min-width: 860px) {
   :root { --tabs-h: 0px; --accion-h: 0px; }
   .app { padding-left: 96px; }

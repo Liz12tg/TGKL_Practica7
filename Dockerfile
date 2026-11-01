@@ -1,4 +1,3 @@
-# Despliegue: una imagen, un proceso (sistema + 2 cajas + interfaz). El hosting da HTTPS y define PORT.
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY src ./src
