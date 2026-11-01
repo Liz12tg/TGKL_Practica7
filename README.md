@@ -1,48 +1,40 @@
-# Práctica 7: Apps y PWA (REST + manifest + service worker)
+# Práctica 7: Apps y PWA
 
-La boletería de la práctica 6 (un **sistema central**, varias **cajas** con varios **clientes** cada una) ahora se usa
-como una **aplicación instalable**: una PWA con API REST versionada, Web App Manifest y service worker.
+En esta práctica se retoma la boletería de la práctica 6 y se convierte en una aplicación web instalable (PWA), que puede utilizarse desde una computadora o un celular, incluso sin conexión a internet.
+El sistema está formado por cinco programas:
 
-```
-Navegador / app instalada ── HTTP ──> Interfaz (REST v1 + archivos de la PWA) ──> Clientes ──> Cajas ──> Sistema central
-   manifest + service worker              :8080            (el token interno nunca llega al navegador)
-```
-
-| Programa | Rol |
+| Programa | Funcion |
 |----------|-----|
-| `Sistema` | Inventario único de boletos; vende de forma atómica (nunca de más) |
-| `Caja` | Semáforo de clientes simultáneos, sesiones, lease, límite por cliente, relojes de Lamport |
-| `Cliente` | Llega a una caja; si está llena prueba otra; si todas están llenas espera en fila |
-| `Interfaz` | **API REST v1** + sirve la PWA (`web/`). Es un BFF: guarda el token y lanza los clientes. Sin argumentos arranca *todo en uno* |
-| `Web` | Utilidades compartidas (token, HTTP, JSON, pool acotado) |
+| `Sistema` | Administra el inventario de boletos y evita que se vendan más de los disponibles |
+| `Caja` | Atiende a los clientes, controla las sesiones y limita las compras simultáneas |
+| `Cliente` | Solicita una caja disponible. Si todas están ocupadas, espera en una fila |
+| `Interfaz` | Proporciona la API REST, muestra la aplicación web y coordina los demás programas |
+| `Web` | Contiene herramientas compartidas para manejar la comunicación, los datos y las solicitudes |
 
 Solo usa el JDK 17+.
 
-## Inicio rápido (Windows)
+## Cómo ejecutar la práctica en windows
 
 ```bat
-cd practica-07-apps-pwa
-iniciar.bat
+cd TGKL_Practica7
+.\iniciar.bat
 ```
+Esto inicia automáticamente el sistema, las dos cajas y la interfaz. Después, abre http://localhost:8080 en Chrome o Edge.
 
-Un solo proceso levanta el sistema central, las dos cajas y la interfaz, y abre <http://localhost:8080> (usa **Chrome o Edge**).
-Linux/macOS: `./iniciar.sh`. Para ver la fila rápido: `iniciar.bat demo` (6 boletos, cajas de 1 cliente) o el botón
-**Probar la fila** en la pestaña *En vivo*. Detener: Ctrl+C o cerrar la ventana.
+En Linux o macOS se utiliza:
 
-> Ejecuta desde esta carpeta (busca los archivos en `web/`; otra ruta: `-Dweb=ruta\a\web`).
-> El modo de 4 procesos de la práctica 6 sigue existiendo: `java -cp out Sistema ...`, `Caja ...`, `Interfaz 8080 host:puerto ...`.
+```bat
+./iniciar.sh
+```
+Para detener el sistema, presiona Ctrl + C o cierra la ventana.
 
-## Desplegar en internet (con HTTPS)
+## Instalación como aplicación
 
 Una PWA instalable necesita HTTPS fuera de `localhost`. Los hostings dan el certificado gratis, así que basta con subir el repo:
 
 1. Sube la carpeta a GitHub (el `Dockerfile` ya está en la raíz de la práctica).
 2. En [Render](https://render.com) → *New → Web Service* → elige el repo → *Runtime: Docker* → *Create*. (Railway, Fly.io o Google Cloud Run funcionan igual.)
 3. En unos minutos queda en `https://tu-app.onrender.com`; ábrela en el celular y *Instalar*.
-
-Variables opcionales: `BOLETOS` (por defecto 20) y `CUPO` (clientes por caja, 2). El hosting define `PORT` y el programa lo detecta:
-al verlo escucha en todas las interfaces y acepta el dominio público; además genera un **token interno aleatorio** en cada arranque
-(solo lo conocen los componentes del mismo proceso). Local con Docker: `docker build -t boleteria . && docker run -p 8080:8080 -e PORT=8080 boleteria`.
 
 ### Instalarla como app
 
@@ -70,9 +62,6 @@ DevTools → **Application** muestra *Manifest*, *Service Workers* y *Cache Stor
 | `GET /api/v1/compras?ids=&activas=&limite=` | Lista de compras | 200 |
 | `POST /api/v1/compras` | Crea una compra `{nombre, boletos}` | **202** + `Location`, **200** si repite la llave, 400, 403, 413, 415, **429** + `Retry-After` |
 | `GET /api/v1/compras/{id}` | Estado de una compra | 200, 404, 405 (+`Allow`) |
-
-Decisiones de diseño: la compra es **asíncrona** (202 y se consulta), `Idempotency-Key` evita cobrar dos veces al reintentar
-(respuesta con `Idempotent-Replayed: true`), y los recursos tienen enlaces (`enlaces.self`).
 
 ## Web App Manifest (`web/manifest.webmanifest`)
 
