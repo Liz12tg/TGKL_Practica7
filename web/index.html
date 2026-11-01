@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boletería Ópera</title>
+<meta name="description" content="Compra boletos del concierto de ópera y mira en vivo cuántos sobran.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1558C0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F2A4D" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Boletería">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<!-- Iconos (se reutilizan con <use>) -->
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-boleto" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a2.5 2.5 0 0 0 0 5V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a2.5 2.5 0 0 0 0-5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 6.5v11" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2 2.2" fill="none"/></symbol>
+  <symbol id="i-cartera" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M7 15h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-caja" viewBox="0 0 24 24"><path d="M4 9.5 5.5 5h13L20 9.5M4 9.5h16V19H4zM9 19v-5h6v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="i-vivo" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-instalar" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-menos" viewBox="0 0 24 24"><path d="M6 12h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sin-red" viewBox="0 0 24 24"><path d="M2.5 9a15 15 0 0 1 4-2.4M21.5 9a15 15 0 0 0-9.5-4M5.5 12.5a10 10 0 0 1 3-1.8M18.5 12.5a10 10 0 0 0-3.6-2.2M9 16a5 5 0 0 1 6 0M12 19.5h.01M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-campana" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 1 1 12 0v6l1.5 2h-15zM10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="app" id="app">
+
+  <header class="barra">
+    <div class="barra-marca">
+      <img src="/favicon.svg" alt="" width="30" height="30">
+      <div>
+        <h1>Boletería Ópera</h1>
+        <p id="barra-sub">Concierto de ópera</p>
+      </div>
+    </div>
+    <div class="barra-acciones">
+      <button class="boton-barra" id="btn-instalar" type="button" hidden>
+        <svg class="ico" aria-hidden="true"><use href="#i-instalar"/></svg><span>Instalar</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="aviso" id="aviso" role="status" hidden>
+    <svg class="ico" aria-hidden="true"><use href="#i-sin-red"/></svg>
+    <span id="aviso-texto"></span>
+  </div>
+
+  <main class="vistas" id="vistas">
+
+    <!-- ============================================ BOLETOS -->
+    <section class="vista" id="v-boletos" aria-labelledby="t-boletos" data-vista="boletos">
+      <h2 class="oculto" id="t-boletos">Boletos</h2>
+
+      <article class="cartel" id="cartel">
+        <h3 id="cartel-nombre">Concierto de ópera</h3>
+        <div class="cartel-cifra">
+          <span class="cifra" id="cifra-disponibles">—</span>
+          <span class="cifra-texto" id="cifra-texto">boletos disponibles</span>
+        </div>
+        <div class="barra-progreso" aria-hidden="true"><i id="progreso"></i></div>
+        <p class="cartel-pie"><span id="cartel-vendidos">—</span> vendidos de <span id="cartel-total">—</span></p>
+        <p class="cartel-pie" id="cartel-cajas">—</p>
+        <p class="cartel-agotado" id="cartel-agotado" hidden>Función agotada</p>
+      </article>
+
+      <article class="tarjeta" id="instalar-tarjeta" hidden>
+        <div class="tarjeta-fila">
+          <img src="/icons/icon-192.png" alt="" width="44" height="44" class="mini-icono">
+          <div class="tarjeta-texto">
+            <h3>Instala la app</h3>
+            <p id="instalar-ayuda">Ábrela desde tu pantalla de inicio, sin barra del navegador y aunque no tengas internet.</p>
+          </div>
+        </div>
+        <div class="tarjeta-botones">
+          <button type="button" class="btn btn-claro" id="instalar-despues">Ahora no</button>
+          <button type="button" class="btn btn-primario" id="instalar-ahora">Instalar</button>
+        </div>
+      </article>
+
+      <article class="tarjeta" id="compra-activa" hidden aria-live="polite">
+        <div class="tarjeta-fila">
+          <span class="insignia" id="activa-color"></span>
+          <div class="tarjeta-texto">
+            <h3 id="activa-titulo">Tu compra</h3>
+            <p id="activa-mensaje"></p>
+          </div>
+        </div>
+        <ol class="pasos" id="activa-pasos" aria-label="Avance de la compra"></ol>
+      </article>
+
+      <form class="tarjeta" id="form-compra" autocomplete="off" novalidate>
+        <h3>Inicia tu compra</h3>
+        <label class="campo" for="nombre">Tu nombre</label>
+        <input class="entrada" type="text" id="nombre" name="nombre" maxlength="40" placeholder="Como aparecerá en tus boletos" autocomplete="given-name" required>
+        <p class="error-campo" id="error-nombre" role="alert"></p>
+
+        <span class="campo" id="lbl-cantidad">Boletos</span>
+        <div class="contador" role="group" aria-labelledby="lbl-cantidad">
+          <button type="button" class="contador-btn" id="menos" aria-label="Quitar un boleto"><svg class="ico" aria-hidden="true"><use href="#i-menos"/></svg></button>
+          <output class="contador-valor" id="cantidad" for="menos mas" aria-live="polite">2</output>
+          <button type="button" class="contador-btn" id="mas" aria-label="Agregar un boleto"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg></button>
+        </div>
+        <p class="ayuda" id="ayuda-cantidad">Máximo 8 por persona.</p>
+      </form>
+
+      <div class="barra-accion">
+        <button type="submit" form="form-compra" class="btn btn-primario btn-grande" id="btn-comprar">Comprar</button>
+      </div>
+    </section>
+
+    <!-- ============================================ MIS BOLETOS -->
+    <section class="vista" id="v-mis-boletos" aria-labelledby="t-mis" data-vista="mis-boletos" hidden>
+      <h2 class="titulo-vista" id="t-mis">Mis boletos</h2>
+      <div id="cola-lista"></div>
+      <div id="mis-lista"></div>
+      <div class="vacio" id="mis-vacio" hidden>
+        <svg class="ico ico-grande" aria-hidden="true"><use href="#i-boleto"/></svg>
+        <h3>Aún no tienes boletos</h3>
+        <p>Cuando compres, aparecerán aquí y podrás verlos aunque no tengas internet.</p>
+        <button type="button" class="btn btn-primario" data-ir="boletos">Comprar boletos</button>
+      </div>
+    </section>
+
+    <!-- ============================================ CAJAS -->
+    <section class="vista" id="v-cajas" aria-labelledby="t-cajas" data-vista="cajas" hidden>
+      <h2 class="titulo-vista" id="t-cajas">Cajas</h2>
+      <div class="cajas" id="cajas"></div>
+    </section>
+
+    <!-- ============================================ EN VIVO -->
+    <section class="vista" id="v-en-vivo" aria-labelledby="t-vivo" data-vista="en-vivo" hidden>
+      <h2 class="oculto" id="t-vivo">En vivo</h2>
+
+      <article class="tarjeta">
+        <div class="tarjeta-cab">
+          <h3>Mapa de butacas</h3>
+          <span class="chip" id="vivo-sobran">—</span>
+        </div>
+        <div class="butacas" id="butacas" aria-label="Butacas del evento"></div>
+      </article>
+
+      <article class="tarjeta">
+        <div class="tarjeta-cab">
+          <h3>Probar la fila</h3>
+        </div>
+        <p class="ayuda">Manda a 8 clientes de 3 boletos a la vez. Sobra gente para las cajas, así que se forma fila y al final se agotan los boletos.</p>
+        <button type="button" class="btn btn-claro btn-ancho" id="btn-simular">Llegan 8 clientes a la vez</button>
+        <p class="error-campo" id="error-simular" role="alert"></p>
+      </article>
+
+      <h3 class="seccion">Clientes <span class="chip" id="vivo-fila" hidden></span></h3>
+      <div id="clientes" class="clientes"></div>
+
+      <h3 class="seccion">Bitácora</h3>
+      <div class="bitacora" id="bitacora" tabindex="0" aria-label="Bitácora de eventos"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabs" id="tabs" aria-label="Secciones">
+    <button type="button" class="tab" data-ir="boletos" aria-current="page">
+      <svg class="ico" aria-hidden="true"><use href="#i-boleto"/></svg><span>Boletos</span>
+    </button>
+    <button type="button" class="tab" data-ir="mis-boletos">
+      <svg class="ico" aria-hidden="true"><use href="#i-cartera"/></svg><span>Mis boletos</span><b class="insignia-tab" id="insignia-mis" hidden>0</b>
+    </button>
+    <button type="button" class="tab" data-ir="cajas">
+      <svg class="ico" aria-hidden="true"><use href="#i-caja"/></svg><span>Cajas</span>
+    </button>
+    <button type="button" class="tab" data-ir="en-vivo">
+      <svg class="ico" aria-hidden="true"><use href="#i-vivo"/></svg><span>En vivo</span>
+    </button>
+  </nav>
+
+  <div class="avisos-flotantes" id="toasts" aria-live="polite"></div>
+
+  <div class="hoja-fondo" id="hoja-fondo" hidden>
+    <div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-titulo" tabindex="-1">
+      <div class="hoja-asa" aria-hidden="true"></div>
+      <div class="hoja-check" aria-hidden="true"><svg class="ico"><use href="#i-ok"/></svg></div>
+      <h3 id="hoja-titulo">¡Listo!</h3>
+      <p id="hoja-texto"></p>
+      <div class="hoja-folios" id="hoja-folios"></div>
+      <button type="button" class="btn btn-primario btn-ancho" id="hoja-ver">Ver mis boletos</button>
+      <button type="button" class="btn btn-claro btn-ancho" id="hoja-cerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

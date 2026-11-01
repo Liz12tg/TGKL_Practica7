@@ -1,0 +1,5 @@
+out
+docs
+*.md
+*.bat
+*.sh

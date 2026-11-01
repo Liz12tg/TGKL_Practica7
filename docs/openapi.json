@@ -1,0 +1,30 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Boletería Ópera – API REST v1", "version": "1.0.0",
+    "description": "API de la Interfaz (BFF). El token interno Interfaz→Caja→Sistema nunca llega al navegador." },
+  "servers": [ { "url": "http://localhost:8080" } ],
+  "paths": {
+    "/api/v1/salud": { "get": { "summary": "Estado del servicio", "responses": { "200": { "description": "OK" } } } },
+    "/api/v1/evento": { "get": { "summary": "Boletos del evento", "description": "Soporta ETag / If-None-Match (304).",
+      "responses": { "200": { "description": "Evento", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Evento" } } } }, "304": { "description": "Sin cambios" } } } },
+    "/api/v1/cajas": { "get": { "summary": "Cajas y su ocupación", "responses": { "200": { "description": "Lista de cajas", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Caja" } } } } }, "304": { "description": "Sin cambios" } } } },
+    "/api/v1/eventos": { "get": { "summary": "Bitácora incremental", "parameters": [ { "name": "desde", "in": "query", "schema": { "type": "integer" } } ], "responses": { "200": { "description": "Eventos desde N" } } } },
+    "/api/v1/compras": {
+      "get": { "summary": "Listar compras", "parameters": [
+        { "name": "ids", "in": "query", "schema": { "type": "string" }, "description": "1,2,3" },
+        { "name": "activas", "in": "query", "schema": { "type": "boolean" } },
+        { "name": "limite", "in": "query", "schema": { "type": "integer", "default": 100, "maximum": 500 } } ],
+        "responses": { "200": { "description": "Compras", "content": { "application/json": { "schema": { "type": "object", "properties": { "total": { "type": "integer" }, "compras": { "type": "array", "items": { "$ref": "#/components/schemas/Compra" } } } } } } } } },
+      "post": { "summary": "Crear una compra (asíncrona)",
+        "description": "Requiere Content-Type application/json y la cabecera X-Requested-With. Idempotency-Key opcional (8–64 caracteres [A-Za-z0-9_-]): repetirla devuelve la misma compra con 200 e Idempotent-Replayed: true.",
+        "parameters": [ { "name": "Idempotency-Key", "in": "header", "schema": { "type": "string" } }, { "name": "X-Requested-With", "in": "header", "required": true, "schema": { "type": "string" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["nombre", "boletos"], "properties": { "nombre": { "type": "string", "maxLength": 40 }, "boletos": { "type": "integer", "minimum": 1, "maximum": 8 } } } } } },
+        "responses": { "202": { "description": "Aceptada; Location apunta a la compra" }, "200": { "description": "Repetición idempotente" }, "400": { "description": "Datos inválidos" }, "403": { "description": "Falta X-Requested-With o Host no permitido" }, "413": { "description": "Cuerpo demasiado grande" }, "415": { "description": "Content-Type no es JSON" }, "429": { "description": "Demasiadas compras activas", "headers": { "Retry-After": { "schema": { "type": "integer" } } } } } } },
+    "/api/v1/compras/{id}": { "get": { "summary": "Consultar una compra", "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ], "responses": { "200": { "description": "Compra", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Compra" } } } }, "404": { "description": "No existe" }, "405": { "description": "Método no permitido (cabecera Allow)" } } } }
+  },
+  "components": { "schemas": {
+    "Evento": { "type": "object", "properties": { "nombre": { "type": "string" }, "enLinea": { "type": "boolean" }, "total": { "type": "integer" }, "vendidos": { "type": "integer" }, "disponibles": { "type": "integer" }, "reloj": { "type": "integer" }, "instancia": { "type": "integer", "description": "Cambia cuando el servidor se reinicia" } } },
+    "Caja": { "type": "object", "properties": { "id": { "type": "string" }, "direccion": { "type": "string" }, "enLinea": { "type": "boolean" }, "ventas": { "type": "integer" }, "maxClientes": { "type": "integer" }, "sesiones": { "type": "integer" }, "reloj": { "type": "integer" } } },
+    "Compra": { "type": "object", "properties": { "id": { "type": "integer" }, "nombre": { "type": "string" }, "boletos": { "type": "integer" }, "comprados": { "type": "integer" }, "folios": { "type": "array", "items": { "type": "integer" } }, "estado": { "type": "string", "enum": ["buscando", "en_caja", "en_fila", "terminada"] }, "resultado": { "type": "string", "enum": ["completa", "parcial", "ninguno"] }, "caja": { "type": "string" }, "mensaje": { "type": "string" } } }
+  } }
+}

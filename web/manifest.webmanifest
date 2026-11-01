@@ -1,0 +1,44 @@
+{
+  "id": "/",
+  "name": "Boletería Ópera",
+  "short_name": "Boletería",
+  "description": "Compra boletos del concierto de ópera y mira en vivo cuántos sobran. Funciona sin conexión.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "/?origen=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#1558C0",
+  "background_color": "#F4F8FD",
+  "categories": ["entertainment", "shopping"],
+  "prefer_related_applications": false,
+  "launch_handler": { "client_mode": "focus-existing" },
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Comprar boletos",
+      "short_name": "Comprar",
+      "description": "Ir directo a la compra de boletos",
+      "url": "/?origen=atajo#boletos",
+      "icons": [{ "src": "/icons/atajo.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Mis boletos",
+      "short_name": "Mis boletos",
+      "description": "Ver los boletos que ya compré",
+      "url": "/?origen=atajo#mis-boletos",
+      "icons": [{ "src": "/icons/atajo.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    { "src": "/icons/captura-movil.png", "sizes": "540x1170", "type": "image/png", "form_factor": "narrow", "label": "Comprar boletos y ver cuántos sobran" },
+    { "src": "/icons/captura-ancha.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "Vista de escritorio con cajas y clientes en vivo" }
+  ]
+}
