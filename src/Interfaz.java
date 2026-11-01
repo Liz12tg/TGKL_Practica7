@@ -142,7 +142,6 @@ public class Interfaz {
                     Integer.parseInt(Web.campo(j, "total")), Integer.parseInt(Web.campo(j, "vendidos")),
                     Integer.parseInt(Web.campo(j, "disponibles")), Integer.parseInt(Web.campo(j, "reloj")));
             if (!folioIniciado) {
-                // Si el Sistema ya había vendido boletos antes de abrir la app, los folios continúan desde ahí.
                 folio.compareAndSet(0, s.vendidos);
                 folioIniciado = true;
             }
@@ -372,7 +371,7 @@ public class Interfaz {
         return b.append("],\"siguiente\":").append(eventos.size()).append('}').toString();
     }
 
-    // ------------------------------------------------------------------ HTTP
+    // HTTP
     private static void cabeceras(HttpExchange ex, String tipo) {
         var h = ex.getResponseHeaders();
         h.set("Content-Type", tipo);
@@ -398,7 +397,6 @@ public class Interfaz {
         responder(ex, codigo, "application/json; charset=UTF-8", cuerpo.getBytes(StandardCharsets.UTF_8), todo);
     }
 
-    /** GET con ETag: si el cliente ya tiene esta versión, responde 304 sin cuerpo. */
     private static void jsonConEtag(HttpExchange ex, String cuerpo) throws IOException {
         String etag = "\"" + Integer.toHexString(cuerpo.hashCode()) + "\"";
         String previo = ex.getRequestHeaders().getFirst("If-None-Match");
@@ -434,7 +432,8 @@ public class Interfaz {
         }
         Path archivo = web.resolve(ruta.substring(1)).normalize();
         if (!archivo.startsWith(web) || !Files.isRegularFile(archivo)) {
-            responder(ex, 404, "text/plain; charset=UTF-8", ("No se encontró " + ruta).getBytes(StandardCharsets.UTF_8));
+            responder(ex, 404, "text/plain; charset=UTF-8", ("No se encontró " + ruta
+                    + ". Ejecute la app desde la carpeta practica-07-apps-pwa.").getBytes(StandardCharsets.UTF_8));
             return;
         }
         byte[] datos = Files.readAllBytes(archivo);
@@ -450,7 +449,7 @@ public class Interfaz {
             responder(ex, 304, tipo, new byte[0], "ETag", etag, "Cache-Control", "no-cache");
             return;
         }
-        // no-cache = "revalida con el servidor antes de usarlo"; el service worker es quien guarda la copia sin conexión.
+
         if (nombre.equals("sw.js")) {
             responder(ex, 200, tipo, datos, "ETag", etag, "Cache-Control", "no-cache", "Service-Worker-Allowed", "/");
         } else {
@@ -517,7 +516,6 @@ public class Interfaz {
     }
 
     private void crearCompra(HttpExchange ex) throws IOException {
-        // CSRF: otra página no puede mandar este encabezado ni este tipo de contenido sin que el navegador pida permiso.
         if (ex.getRequestHeaders().getFirst("X-Requested-With") == null) {
             json(ex, 403, error("Falta el encabezado X-Requested-With", null));
             return;
@@ -561,7 +559,6 @@ public class Interfaz {
 
         Compra nueva;
         synchronized (llaves) {
-            // Idempotencia: si la app reintenta la misma compra (por ejemplo, al volver la conexión), no se crea otra.
             if (llave != null && llaves.containsKey(llave)) {
                 int id = llaves.get(llave);
                 Compra previa = compras.stream().filter(x -> x.id == id).findFirst().orElse(null);
@@ -583,6 +580,7 @@ public class Interfaz {
         List<Web.Nodo> orden = new ArrayList<>(cajas);
         Collections.rotate(orden, -((nueva.id - 1) % cajas.size()));
         final Compra c = nueva;
+
         final int pedidos = boletos;
         Thread hilo = new Thread(() -> {
             try {
@@ -594,7 +592,6 @@ public class Interfaz {
         }, "cliente-" + nombre);
         hilo.setDaemon(true);
         hilo.start();
-        // 202 Accepted: la compra se procesa en segundo plano; la app consulta Location para ver cómo va.
         json(ex, 202, jsonCompra(c), "Location", API + "/compras/" + c.id);
     }
 
@@ -611,7 +608,6 @@ public class Interfaz {
             try {
                 json(ex, 500, error("Error interno", null));
             } catch (IOException | RuntimeException ignorado) {
-                // la respuesta ya había empezado
             }
         } finally {
             ex.close();
@@ -648,12 +644,7 @@ public class Interfaz {
         System.out.println();
     }
 
-    /**
-     * Todo en uno: un solo proceso con el sistema central, dos cajas y la interfaz.
-     * Es lo que usa el despliegue (Docker/hosting): variables PORT, BOLETOS y CUPO.
-     */
     private static void todoEnUno() throws IOException {
-        // Token interno aleatorio: solo lo conocen los componentes de este proceso.
         if (System.getProperty("tkn") == null) { System.setProperty("tkn", java.util.UUID.randomUUID().toString()); }
         String pe = System.getenv("PORT");
         int puerto = pe != null ? Integer.parseInt(pe) : 8080;

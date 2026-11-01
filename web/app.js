@@ -585,6 +585,7 @@ async function instalar() {
 }
 
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; pintarInstalar(); });
+
 window.addEventListener('appinstalled', () => { promptInstalar = null; toast('App instalada'); pintarInstalar(); });
 
 /* service worker */

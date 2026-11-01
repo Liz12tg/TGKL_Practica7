@@ -383,7 +383,6 @@ button { font: inherit; color: inherit; }
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
 
-/* cuando la app está instalada (sin barra del navegador) se evita seleccionar el texto de la interfaz por accidente */
 @media (display-mode: standalone) {
   .tab, .barra, .contador-btn, .btn { user-select: none; -webkit-user-select: none; }
   body { -webkit-touch-callout: none; }

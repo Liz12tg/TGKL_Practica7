@@ -120,7 +120,7 @@ self.addEventListener('fetch', evento => {
   } else if (url.pathname.startsWith('/icons/')) {
     evento.respondWith(cachePrimero(peticion));
   } else if (url.pathname === '/sw.js') {
-    return;                                                    6
+    return;                                                    
   } else {
     evento.respondWith(staleWhileRevalidate(peticion));
   }
